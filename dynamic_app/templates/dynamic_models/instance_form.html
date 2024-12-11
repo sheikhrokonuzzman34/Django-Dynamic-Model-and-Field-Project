@@ -1,0 +1,46 @@
+{% extends 'base_generic.html' %}
+
+{% block content %}
+  <h1>Create Instance for {{ model.name }}</h1>
+
+  <form method="post">
+    {% csrf_token %}
+    
+    {% for field in fields %}
+      <div class="form-group">
+        <label for="{{ field.name }}">{{ field.display_name }}</label>
+        {% if field.field_type == 'bool' %}
+          <input type="checkbox" name="{{ field.name }}" id="{{ field.name }}" {% if field.default_value == 'true' %}checked{% endif %}>
+        {% elif field.field_type == 'char' %}
+          <input type="text" name="{{ field.name }}" id="{{ field.name }}" class="form-control">
+        {% elif field.field_type == 'text' %}
+          <textarea name="{{ field.name }}" id="{{ field.name }}" class="form-control"></textarea>
+        {% elif field.field_type == 'int' %}
+          <input type="number" name="{{ field.name }}" id="{{ field.name }}" class="form-control">
+        {% elif field.field_type == 'decimal' %}
+          <input type="number" step="any" name="{{ field.name }}" id="{{ field.name }}" class="form-control">
+        {% elif field.field_type == 'date' %}
+          <input type="date" name="{{ field.name }}" id="{{ field.name }}" class="form-control">
+        {% elif field.field_type == 'datetime' %}
+          <input type="datetime-local" name="{{ field.name }}" id="{{ field.name }}" class="form-control">
+        {% elif field.field_type == 'fk' %}
+          <select name="{{ field.name }}" id="{{ field.name }}" class="form-control">
+            {% for option in field.related_model.all %}
+              <option value="{{ option.pk }}">{{ option }}</option>
+            {% endfor %}
+          </select>
+        {% elif field.field_type == 'm2m' %}
+          <select name="{{ field.name }}" id="{{ field.name }}" class="form-control" multiple>
+            {% for option in field.related_model.all %}
+              <option value="{{ option.pk }}">{{ option }}</option>
+            {% endfor %}
+          </select>
+        {% endif %}
+      </div>
+    {% endfor %}
+
+    <button type="submit" class="btn btn-success">Create Instance</button>
+  </form>
+
+  <a href="{% url 'model_detail' model.pk %}" class="btn btn-link">Back to Model Detail</a>
+{% endblock %}

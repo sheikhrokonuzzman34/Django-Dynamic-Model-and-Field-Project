@@ -1,0 +1,15 @@
+{% extends 'base_generic.html' %}
+
+{% block content %}
+  <h1>{% if field %}Update{% else %}Add{% endif %} Field for {{ model.name }}</h1>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-success">
+      {% if field %}Update Field{% else %}Add Field{% endif %}
+    </button>
+  </form>
+
+  <a href="{% url 'model_detail' model.pk %}" class="btn btn-link">Back to Model Detail</a>
+{% endblock %}

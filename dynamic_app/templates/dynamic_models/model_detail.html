@@ -1,0 +1,30 @@
+{% extends 'base_generic.html' %}
+
+{% block content %}
+  <h1>{{ model.name }} - Detail</h1>
+  <p><strong>Description:</strong> {{ model.description }}</p>
+  <p><strong>Created by:</strong> {{ model.created_by }}</p>
+  <p><strong>Created at:</strong> {{ model.created_at }}</p>
+
+  <h2>Fields</h2>
+  <a href="{% url 'field_create' model.pk %}" class="btn btn-primary">Add New Field</a>
+  <ul>
+    {% for field in fields %}
+      <li>{{ field.display_name }} (Type: {{ field.get_field_type_display }})</li>
+    {% empty %}
+      <li>No fields added yet.</li>
+    {% endfor %}
+  </ul>
+
+  <h2>Instances</h2>
+  <a href="{% url 'instance_create' model.pk %}" class="btn btn-primary">Create New Instance</a>
+  <ul>
+    {% for instance in instances %}
+      <li>{{ instance.pk }} - {{ instance.created_at }}</li>
+    {% empty %}
+      <li>No instances created yet.</li>
+    {% endfor %}
+  </ul>
+
+  <a href="{% url 'model_list' %}" class="btn btn-link">Back to Model List</a>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends 'base_generic.html' %}
+
+{% block content %}
+  <h1>Create Dynamic Model</h1>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-success">Create Model</button>
+  </form>
+
+  <a href="{% url 'model_list' %}" class="btn btn-link">Back to Model List</a>
+{% endblock %}

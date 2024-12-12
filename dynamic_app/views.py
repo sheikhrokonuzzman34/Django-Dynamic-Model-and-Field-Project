@@ -39,6 +39,8 @@ def model_detail(request, pk):
         'instances': instances
     })
 
+
+    
 @login_required
 def field_create(request, model_pk):
     model = get_object_or_404(DynamicModel, pk=model_pk, created_by=request.user)
@@ -48,6 +50,7 @@ def field_create(request, model_pk):
         if form.is_valid():
             field = form.save(commit=False)
             field.dynamic_model = model
+            field.created_by = request.user  # Assign the logged-in user
             field.save()
             messages.success(request, 'Field added successfully!')
             return redirect('model_detail', pk=model_pk)
@@ -58,6 +61,7 @@ def field_create(request, model_pk):
         'form': form,
         'model': model
     })
+    
 
 @login_required
 def field_update(request, pk):
@@ -100,7 +104,7 @@ def instance_create(request, model_pk):
                 data=data
             )
             messages.success(request, 'Instance created successfully!')
-            return redirect('model_detail', pk=model_pk)
+            return redirect('instance_list',  model_pk=model_pk)
         
         messages.error(request, 'Please correct the errors below.')
     
@@ -108,3 +112,16 @@ def instance_create(request, model_pk):
         'model': model,
         'fields': fields
     })
+    
+    
+@login_required
+def instance_list(request, model_pk):
+    model = get_object_or_404(DynamicModel, pk=model_pk, created_by=request.user)
+    instances = DynamicModelInstance.objects.filter(dynamic_model=model)
+
+    fields = model.fields.all()  # Get all the fields of the dynamic model
+    return render(request, 'dynamic_models/instance_list.html', {
+        'model': model,
+        'instances': instances,
+        'fields': fields,
+    })    

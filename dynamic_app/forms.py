@@ -2,7 +2,6 @@ from django import forms
 from .models import DynamicModel, DynamicField, DynamicModelInstance
 from django.core.exceptions import ValidationError
 
-
 class DynamicModelForm(forms.ModelForm):
     class Meta:
         model = DynamicModel
@@ -23,13 +22,14 @@ class DynamicModelForm(forms.ModelForm):
 class DynamicFieldForm(forms.ModelForm):
     class Meta:
         model = DynamicField
-        fields = ['dynamic_model', 'name', 'display_name', 'field_type', 'is_required', 
-                  'is_unique', 'is_readonly', 'default_value', 'display_order', 'related_model', 'field_options']
+        fields = [
+            'dynamic_model', 'name', 'display_name', 'field_type', 
+            'is_required', 'is_unique', 'is_readonly',  'display_order'
+        ]
         
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['dynamic_model'].queryset = DynamicModel.objects.all()
-        self.fields['related_model'].queryset = DynamicModel.objects.all()
 
     def clean_name(self):
         name = self.cleaned_data.get('name')
@@ -42,8 +42,8 @@ class DynamicFieldForm(forms.ModelForm):
 
     def clean_field_type(self):
         field_type = self.cleaned_data.get('field_type')
-        if field_type == 'fk' and not self.cleaned_data.get('related_model'):
-            raise ValidationError("Foreign Key type fields must have a related model.")
+        if field_type not in ['char', 'text', 'int', 'decimal', 'bool', 'date', 'datetime']:
+            raise ValidationError("Invalid field type selected.")
         return field_type
 
 
@@ -72,13 +72,8 @@ class DynamicModelInstanceForm(forms.ModelForm):
                     self.fields[field.name] = forms.DateField(required=field.is_required)
                 elif field.field_type == 'datetime':
                     self.fields[field.name] = forms.DateTimeField(required=field.is_required)
-                elif field.field_type == 'fk':
-                    self.fields[field.name] = forms.ModelChoiceField(queryset=field.related_model.objects.all(), required=field.is_required)
-                elif field.field_type == 'm2m':
-                    self.fields[field.name] = forms.ModelMultipleChoiceField(queryset=field.related_model.objects.all(), required=field.is_required)
                 
-                if field.default_value:
-                    self.fields[field.name].initial = field.default_value
+                
 
     def clean(self):
         cleaned_data = super().clean()

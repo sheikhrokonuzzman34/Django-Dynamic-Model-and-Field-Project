@@ -25,6 +25,8 @@ urlpatterns = [
     path('models/<int:pk>/', views.model_detail, name='model_detail'),
     path('models/<int:model_pk>/fields/create/', views.field_create, name='field_create'),
     path('fields/<int:pk>/update/', views.field_update, name='field_update'),
+    
+    path('models/<int:model_pk>/instances/', views.instance_list, name='instance_list'),
     path('models/<int:model_pk>/instances/create/', views.instance_create, name='instance_create'),
 
 ]

@@ -27,4 +27,5 @@
   </ul>
 
   <a href="{% url 'model_list' %}" class="btn btn-link">Back to Model List</a>
+  <a href="{% url 'instance_list' model_pk=model.pk %}" class="btn btn-link">Instances Detail </a>
 {% endblock %}

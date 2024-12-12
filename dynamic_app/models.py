@@ -6,7 +6,6 @@ import json
 
 class DynamicModel(models.Model):
     name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(null=True, blank=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -23,8 +22,6 @@ class DynamicField(models.Model):
         ('bool', 'Boolean'),
         ('date', 'Date'),
         ('datetime', 'DateTime'),
-        ('fk', 'Foreign Key'),
-        ('m2m', 'Many to Many'),
     ]
 
     dynamic_model = models.ForeignKey(DynamicModel, on_delete=models.CASCADE, related_name='fields')
@@ -34,11 +31,10 @@ class DynamicField(models.Model):
     is_required = models.BooleanField(default=False)
     is_unique = models.BooleanField(default=True)
     is_readonly = models.BooleanField(default=False)
-    default_value = models.TextField(null=True, blank=True)
     display_order = models.IntegerField(default=0)
-    related_model = models.ForeignKey(DynamicModel, null=True, blank=True, 
-                                    on_delete=models.SET_NULL, related_name='related_fields')
-    field_options = models.JSONField(default=dict, blank=True)  # For additional field configurations
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['display_order']

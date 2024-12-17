@@ -39,6 +39,15 @@ class DynamicFieldForm(forms.ModelForm):
             raise ValidationError(f"Field with name '{name}' already exists in this dynamic model.")
         
         return name
+    
+    def save(self, commit=True):
+        # Automatically assign dynamic_model and created_by here
+        field = super().save(commit=False)
+        if commit:
+            # Assuming `created_by` is being passed as part of the view context
+            field.created_by = self.initial.get('created_by')
+            field.save()
+        return field
 
   
 

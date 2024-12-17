@@ -1,0 +1,62 @@
+{% extends "base_generic.html" %}
+{% load custom_filters %}
+
+{% block content %}
+<h1>Search Results</h1>
+
+<!-- Search Form -->
+<form method="get" action="{% url 'dynamic_instance_search' %}" class="form-inline mb-4">
+    <div class="row g-3">
+        <div class="col-auto">
+            <input 
+                type="text" 
+                name="q" 
+                class="form-control" 
+                placeholder="Search..." 
+                value="{{ query }}">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+    </div>
+</form>
+
+<!-- Results Table -->
+{% if results %}
+<div class="table-responsive">
+    <table class="table table-bordered table-hover">
+        <thead class="table-light">
+            <tr>
+                <th>#</th>
+                <th>Model Name</th>
+                {% for field in fields %}
+                    <th>{{ field.display_name }}</th>
+                {% endfor %}
+                <th>Created By</th>
+                <th>Created At</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for instance in results %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ instance.dynamic_model.name }}</td>
+                {% for field in fields %}
+                    <td>{{ instance.data|get_item:field.name|default:"-" }}</td>
+                {% endfor %}
+                <td>{{ instance.created_by.username }}</td>
+                <td>{{ instance.created_at|date:"d M Y, H:i" }}</td>
+                <td>
+                    <a href="#" class="btn btn-sm btn-secondary">View</a>
+                    <a href="#" class="btn btn-sm btn-warning">Edit</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p>No results found for "{{ query }}".</p>
+{% endif %}
+{% endblock %}

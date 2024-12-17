@@ -44,14 +44,14 @@ def model_detail(request, pk):
 @login_required
 def field_create(request, model_pk):
     model = get_object_or_404(DynamicModel, pk=model_pk, created_by=request.user)
-    
+
     if request.method == 'POST':
-        form = DynamicFieldForm(request.POST, request.FILES)
+        form = DynamicFieldForm(request.POST, request.FILES, initial={
+            'dynamic_model': model,  # Pass the dynamic_model as initial data
+            'created_by': request.user  # Pass the logged-in user as created_by
+        })
         if form.is_valid():
-            field = form.save()
-            field.dynamic_model = model  
-            field.created_by = request.user  
-            field.save()
+            form.save()  # The save method will now assign created_by automatically
             messages.success(request, 'Field added successfully!')
             return redirect('model_detail', pk=model_pk)
     else:
@@ -151,3 +151,31 @@ def instance_list(request, model_pk):
         'instances': instances,
         'fields': fields,
     })    
+    
+    
+
+
+from django.db.models import Q
+
+def dynamic_instance_search(request):
+    query = request.GET.get('q', '')
+    results = []
+    fields = []
+    
+    if query:
+        # Fetch matching DynamicModelInstance objects
+        results = DynamicModelInstance.objects.filter(
+            data__icontains=query
+        ).select_related('dynamic_model', 'created_by')
+        
+        # Get fields from the first instance's dynamic_model
+        if results.exists():
+            fields = results.first().dynamic_model.fields.all()
+
+    context = {
+        'query': query,
+        'results': results,
+        'fields': fields,
+    }
+    return render(request, 'dynamic_models/dynamic_instance_search.html', context)
+    

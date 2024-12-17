@@ -155,7 +155,6 @@ def instance_list(request, model_pk):
     
 
 
-from django.db.models import Q
 
 def dynamic_instance_search(request):
     query = request.GET.get('q', '')

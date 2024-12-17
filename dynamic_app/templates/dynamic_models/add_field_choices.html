@@ -1,0 +1,24 @@
+{% extends 'base_generic.html' %}
+
+{% block content %}
+  <div class="container mt-5">
+    <h1 class="mb-4">Add Choices for Field: {{ field.name }}</h1>
+    
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn btn-success">Add Choice</button>
+    </form>
+
+    <h2 class="mt-4">Existing Choices</h2>
+    <ul class="list-group">
+      {% for choice in choices %}
+        <li class="list-group-item">{{ choice.display_name }} ({{ choice.value }})</li>
+      {% empty %}
+        <li class="list-group-item">No choices added yet.</li>
+      {% endfor %}
+    </ul>
+
+    <a href="{% url 'model_detail' field.dynamic_model.pk %}" class="btn btn-secondary mt-3">Back to Model</a>
+  </div>
+{% endblock %}

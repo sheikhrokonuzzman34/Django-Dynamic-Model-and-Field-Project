@@ -3,8 +3,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
-from .models import DynamicModel, DynamicField, DynamicModelInstance
-from .forms import DynamicModelForm, DynamicFieldForm
+from .models import *
+from .forms import *
 import json
 
 @login_required
@@ -46,11 +46,11 @@ def field_create(request, model_pk):
     model = get_object_or_404(DynamicModel, pk=model_pk, created_by=request.user)
     
     if request.method == 'POST':
-        form = DynamicFieldForm(request.POST)
+        form = DynamicFieldForm(request.POST, request.FILES)
         if form.is_valid():
-            field = form.save(commit=False)
-            field.dynamic_model = model
-            field.created_by = request.user  # Assign the logged-in user
+            field = form.save()
+            field.dynamic_model = model  
+            field.created_by = request.user  
             field.save()
             messages.success(request, 'Field added successfully!')
             return redirect('model_detail', pk=model_pk)
@@ -61,6 +61,32 @@ def field_create(request, model_pk):
         'form': form,
         'model': model
     })
+    
+@login_required
+def add_field_choices(request, field_id):
+    field = get_object_or_404(DynamicField, pk=field_id, created_by=request.user)
+    
+    if request.method == 'POST':
+        form = DynamicFieldChoiceForm(request.POST)
+        if form.is_valid():
+            choice = form.save(commit=False)
+            choice.dynamic_field = field  # Associate the choice with the field
+            choice.save()
+            messages.success(request, 'Choice added successfully!')
+            return redirect('add_field_choices', field_id=field_id)
+    else:
+        form = DynamicFieldChoiceForm()
+    
+    choices = DynamicFieldChoice.objects.filter(dynamic_field=field)
+    
+    return render(request, 'dynamic_models/add_field_choices.html', {
+        'form': form,
+        'field': field,
+        'choices': choices
+    })
+
+    
+
     
 
 @login_required

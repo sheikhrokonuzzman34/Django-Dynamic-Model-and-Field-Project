@@ -12,6 +12,10 @@ class DynamicModel(models.Model):
 
     def __str__(self):
         return self.name
+    
+    
+
+    
 
 class DynamicField(models.Model):
     FIELD_TYPES = [
@@ -22,6 +26,8 @@ class DynamicField(models.Model):
         ('bool', 'Boolean'),
         ('date', 'Date'),
         ('datetime', 'DateTime'),
+        ('file', 'File'),  
+        ('choice', 'Choice'),  
     ]
 
     dynamic_model = models.ForeignKey(DynamicModel, on_delete=models.CASCADE, related_name='fields')
@@ -42,6 +48,19 @@ class DynamicField(models.Model):
 
     def __str__(self):
         return f"{self.dynamic_model.name} - {self.name}"
+    
+    
+class DynamicFieldChoice(models.Model):
+    dynamic_field = models.ForeignKey(DynamicField, on_delete=models.CASCADE, related_name='choices')
+    value = models.CharField(max_length=255)
+    display_name = models.CharField(max_length=255)
+    order = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return self.display_name    
 
 class DynamicModelInstance(models.Model):
     dynamic_model = models.ForeignKey(DynamicModel, on_delete=models.CASCADE)

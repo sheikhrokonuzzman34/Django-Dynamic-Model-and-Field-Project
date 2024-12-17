@@ -1,5 +1,5 @@
 from django import forms
-from .models import DynamicModel, DynamicField, DynamicModelInstance
+from .models import *
 from django.core.exceptions import ValidationError
 
 class DynamicModelForm(forms.ModelForm):
@@ -24,7 +24,7 @@ class DynamicFieldForm(forms.ModelForm):
         model = DynamicField
         fields = [
             'dynamic_model', 'name', 'display_name', 'field_type', 
-            'is_required', 'is_unique', 'is_readonly',  'display_order'
+            'is_required', 'is_unique', 'is_readonly', 'display_order'
         ]
         
     def __init__(self, *args, **kwargs):
@@ -40,11 +40,7 @@ class DynamicFieldForm(forms.ModelForm):
         
         return name
 
-    def clean_field_type(self):
-        field_type = self.cleaned_data.get('field_type')
-        if field_type not in ['char', 'text', 'int', 'decimal', 'bool', 'date', 'datetime']:
-            raise ValidationError("Invalid field type selected.")
-        return field_type
+  
 
 
 class DynamicModelInstanceForm(forms.ModelForm):
@@ -59,7 +55,7 @@ class DynamicModelInstanceForm(forms.ModelForm):
             fields = dynamic_model.fields.all()
             for field in fields:
                 if field.field_type == 'bool':
-                    self.fields[field.name] = forms.BooleanField(required=False)
+                    self.fields[field.name] = forms.BooleanField(required=field.is_required)
                 elif field.field_type == 'char':
                     self.fields[field.name] = forms.CharField(required=field.is_required, max_length=255)
                 elif field.field_type == 'text':
@@ -72,8 +68,12 @@ class DynamicModelInstanceForm(forms.ModelForm):
                     self.fields[field.name] = forms.DateField(required=field.is_required)
                 elif field.field_type == 'datetime':
                     self.fields[field.name] = forms.DateTimeField(required=field.is_required)
-                
-                
+                elif field.field_type == 'file':
+                    self.fields[field.name] = forms.FileField(required=field.is_required)
+                elif field.field_type == 'choice':
+                    # Fetch choices dynamically
+                    choices = [(choice.value, choice.display_name) for choice in field.choices.all()]
+                    self.fields[field.name] = forms.ChoiceField(choices=choices, required=field.is_required)
 
     def clean(self):
         cleaned_data = super().clean()
@@ -101,4 +101,11 @@ class DynamicModelInstanceForm(forms.ModelForm):
             if errors:
                 raise ValidationError(errors)
 
-        return cleaned_data
+        return cleaned_data    
+    
+    
+class DynamicFieldChoiceForm(forms.ModelForm):
+    class Meta:
+        model = DynamicFieldChoice
+        fields = ['value', 'display_name']
+    

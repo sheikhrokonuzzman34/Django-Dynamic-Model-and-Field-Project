@@ -1,46 +1,76 @@
 {% extends 'base_generic.html' %}
 
 {% block content %}
-  <h1>Create Instance for {{ model.name }}</h1>
+  <div class="container mt-5">
+    <h1 class="mb-4">Create Instance for {{ model.name }}</h1>
 
-  <form method="post">
-    {% csrf_token %}
-    
-    {% for field in fields %}
-      <div class="form-group">
-        <label for="{{ field.name }}">{{ field.display_name }}</label>
-        {% if field.field_type == 'bool' %}
-          <input type="checkbox" name="{{ field.name }}" id="{{ field.name }}" {% if field.default_value == 'true' %}checked{% endif %}>
-        {% elif field.field_type == 'char' %}
-          <input type="text" name="{{ field.name }}" id="{{ field.name }}" class="form-control">
-        {% elif field.field_type == 'text' %}
-          <textarea name="{{ field.name }}" id="{{ field.name }}" class="form-control"></textarea>
-        {% elif field.field_type == 'int' %}
-          <input type="number" name="{{ field.name }}" id="{{ field.name }}" class="form-control">
-        {% elif field.field_type == 'decimal' %}
-          <input type="number" step="any" name="{{ field.name }}" id="{{ field.name }}" class="form-control">
-        {% elif field.field_type == 'date' %}
-          <input type="date" name="{{ field.name }}" id="{{ field.name }}" class="form-control">
-        {% elif field.field_type == 'datetime' %}
-          <input type="datetime-local" name="{{ field.name }}" id="{{ field.name }}" class="form-control">
-        {% elif field.field_type == 'fk' %}
-          <select name="{{ field.name }}" id="{{ field.name }}" class="form-control">
-            {% for option in field.related_model.all %}
-              <option value="{{ option.pk }}">{{ option }}</option>
-            {% endfor %}
-          </select>
-        {% elif field.field_type == 'm2m' %}
-          <select name="{{ field.name }}" id="{{ field.name }}" class="form-control" multiple>
-            {% for option in field.related_model.all %}
-              <option value="{{ option.pk }}">{{ option }}</option>
-            {% endfor %}
-          </select>
-        {% endif %}
-      </div>
-    {% endfor %}
+    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+      {% csrf_token %}
 
-    <button type="submit" class="btn btn-success">Create Instance</button>
-  </form>
+      {% for field in fields %}
+        <div class="form-group mb-3">
+          <label for="{{ field.name }}" class="form-label">{{ field.display_name }}</label>
 
-  <a href="{% url 'model_detail' model.pk %}" class="btn btn-link">Back to Model Detail</a>
+          {% if field.field_type == 'bool' %}
+            <div class="form-check">
+              <input type="checkbox" name="{{ field.name }}" id="{{ field.name }}" class="form-check-input" 
+                     {% if field.default_value == 'true' %}checked{% endif %}>
+              <label for="{{ field.name }}" class="form-check-label">{{ field.display_name }}</label>
+            </div>
+
+          {% elif field.field_type == 'char' %}
+            <input type="text" name="{{ field.name }}" id="{{ field.name }}" class="form-control"
+                   placeholder="Enter {{ field.display_name }}">
+
+          {% elif field.field_type == 'text' %}
+            <textarea name="{{ field.name }}" id="{{ field.name }}" class="form-control" rows="4"
+                      placeholder="Enter {{ field.display_name }}"></textarea>
+
+          {% elif field.field_type == 'int' %}
+            <input type="number" name="{{ field.name }}" id="{{ field.name }}" class="form-control"
+                   placeholder="Enter {{ field.display_name }}">
+
+          {% elif field.field_type == 'decimal' %}
+            <input type="number" step="any" name="{{ field.name }}" id="{{ field.name }}" class="form-control"
+                   placeholder="Enter {{ field.display_name }}">
+
+          {% elif field.field_type == 'date' %}
+            <input type="date" name="{{ field.name }}" id="{{ field.name }}" class="form-control">
+
+          {% elif field.field_type == 'datetime' %}
+            <input type="datetime-local" name="{{ field.name }}" id="{{ field.name }}" class="form-control">
+
+          {% elif field.field_type == 'file' %}
+            <input type="file" name="{{ field.name }}" id="{{ field.name }}" class="form-control">
+
+          {% elif field.field_type == 'choice' %}
+            <select name="{{ field.name }}" id="{{ field.name }}" class="form-control">
+              {% for choice in field.choices.all %}
+                <option value="{{ choice.value }}">{{ choice.display_name }}</option>
+              {% endfor %}
+            </select>
+
+          {% elif field.field_type == 'fk' %}
+            <select name="{{ field.name }}" id="{{ field.name }}" class="form-control">
+              {% for option in field.related_model.all %}
+                <option value="{{ option.pk }}">{{ option }}</option>
+              {% endfor %}
+            </select>
+
+          {% elif field.field_type == 'm2m' %}
+            <select name="{{ field.name }}" id="{{ field.name }}" class="form-control" multiple>
+              {% for option in field.related_model.all %}
+                <option value="{{ option.pk }}">{{ option }}</option>
+              {% endfor %}
+            </select>
+
+          {% endif %}
+
+        </div>
+      {% endfor %}
+
+      <button type="submit" class="btn btn-success">Create Instance</button>
+      <a href="{% url 'model_detail' model.pk %}" class="btn btn-secondary">Back to Model Detail</a>
+    </form>
+  </div>
 {% endblock %}

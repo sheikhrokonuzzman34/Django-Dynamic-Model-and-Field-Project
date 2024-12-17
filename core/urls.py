@@ -20,10 +20,13 @@ from dynamic_app import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    
     path('', views.model_list, name='model_list'),
     path('model_create', views.model_create, name='model_create'),
     path('models/<int:pk>/', views.model_detail, name='model_detail'),
+    
     path('models/<int:model_pk>/fields/create/', views.field_create, name='field_create'),
+    path('fields/<int:field_id>/choices/', views.add_field_choices, name='add_field_choices'),
     path('fields/<int:pk>/update/', views.field_update, name='field_update'),
     
     path('models/<int:model_pk>/instances/', views.instance_list, name='instance_list'),

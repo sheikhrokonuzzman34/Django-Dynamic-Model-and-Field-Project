@@ -23,28 +23,27 @@ class DynamicFieldForm(forms.ModelForm):
     class Meta:
         model = DynamicField
         fields = [
-            'dynamic_model', 'name', 'display_name', 'field_type', 
+            'dynamic_model', 'name', 'display_name', 'field_type',
             'is_required', 'is_unique', 'is_readonly', 'display_order'
         ]
-        
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['dynamic_model'].queryset = DynamicModel.objects.all()
 
-    def clean_name(self):
-        name = self.cleaned_data.get('name')
-        dynamic_model = self.cleaned_data.get('dynamic_model')
-        
-        if DynamicField.objects.filter(dynamic_model=dynamic_model, name=name).exists():
-            raise ValidationError(f"Field with name '{name}' already exists in this dynamic model.")
-        
-        return name
-    
+    def clean(self):
+        cleaned_data = super().clean()
+        field_type = cleaned_data.get('field_type')
+        is_unique = cleaned_data.get('is_unique')
+
+        if field_type == 'file' and is_unique:
+            raise ValidationError("File fields cannot be marked as unique.")
+
+        return cleaned_data
+
     def save(self, commit=True):
-        # Automatically assign dynamic_model and created_by here
         field = super().save(commit=False)
         if commit:
-            # Assuming `created_by` is being passed as part of the view context
             field.created_by = self.initial.get('created_by')
             field.save()
         return field

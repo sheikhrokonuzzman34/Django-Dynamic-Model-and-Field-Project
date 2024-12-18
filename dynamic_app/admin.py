@@ -8,4 +8,7 @@ admin.site.register(DynamicModelInstance)
 admin.site.register(DynamicModel)
 admin.site.register(DynamicField)
 admin.site.register(DynamicFieldChoice)
+admin.site.register(DynamicFieldFile)
+
+
 

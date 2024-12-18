@@ -47,16 +47,16 @@ def field_create(request, model_pk):
 
     if request.method == 'POST':
         form = DynamicFieldForm(request.POST, request.FILES, initial={
-            'dynamic_model': model,  # Pass the dynamic_model as initial data
-            'created_by': request.user  # Pass the logged-in user as created_by
+            'dynamic_model': model,
+            'created_by': request.user
         })
         if form.is_valid():
-            form.save()  # The save method will now assign created_by automatically
+            form.save()
             messages.success(request, 'Field added successfully!')
             return redirect('model_detail', pk=model_pk)
     else:
         form = DynamicFieldForm()
-    
+
     return render(request, 'dynamic_models/field_form.html', {
         'form': form,
         'model': model

@@ -18,6 +18,7 @@
 
   <h2>Instances</h2>
   <a href="{% url 'instance_create' model.pk %}" class="btn btn-primary">Create New Instance</a>
+  
   <ul>
     {% for instance in instances %}
       <li>{{ instance.pk }} - {{ instance.created_at }}</li>

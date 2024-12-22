@@ -116,4 +116,10 @@ class DynamicFieldChoiceForm(forms.ModelForm):
     class Meta:
         model = DynamicFieldChoice
         fields = ['value', 'display_name']
+        
+        
+class DynamicFieldFileForm(forms.ModelForm):
+    class Meta:
+        model = DynamicFieldFile
+        fields = ['file']        
     

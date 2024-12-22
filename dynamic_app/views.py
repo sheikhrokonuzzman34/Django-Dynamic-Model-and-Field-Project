@@ -108,36 +108,87 @@ def field_update(request, pk):
         'model': field.dynamic_model
     })
 
+
+    
+    
+from django.http import JsonResponse
+
 @login_required
 def instance_create(request, model_pk):
     model = get_object_or_404(DynamicModel, pk=model_pk, created_by=request.user)
     fields = model.fields.all()
-    
+
     if request.method == 'POST':
         data = {}
         errors = {}
-        
+        files_to_save = []
+
         for field in fields:
-            value = request.POST.get(field.name)
-            if field.is_required and not value:
-                errors[field.name] = 'This field is required.'
-            data[field.name] = value
-        
+            if field.field_type == 'file':
+                uploaded_file = request.FILES.get(field.name)
+                if field.is_required and not uploaded_file:
+                    errors[field.name] = 'This file is required.'
+                if uploaded_file:
+                    # Validate the file type
+                    try:
+                        validate_file_type(uploaded_file)
+                        files_to_save.append((field, uploaded_file))
+                    except ValidationError as e:
+                        errors[field.name] = e.messages[0]
+            else:
+                value = request.POST.get(field.name)
+                if field.is_required and not value:
+                    errors[field.name] = 'This field is required.'
+                data[field.name] = value
+
         if not errors:
+            # Create the instance
             instance = DynamicModelInstance.objects.create(
                 dynamic_model=model,
                 created_by=request.user,
                 data=data
             )
+
+            # Save files linked to the instance
+            for field, uploaded_file in files_to_save:
+                file_instance = DynamicFieldFile.objects.create(
+                    instance=instance,
+                    field=field,
+                    file=uploaded_file,
+                    file_name=uploaded_file.name,
+                    file_extension=os.path.splitext(uploaded_file.name)[1].lower()
+                )
+
             messages.success(request, 'Instance created successfully!')
-            return redirect('instance_list',  model_pk=model_pk)
-        
+            return redirect('instance_list', model_pk=model_pk)
+
         messages.error(request, 'Please correct the errors below.')
-    
+        return JsonResponse({"errors": errors}, status=400)
+
     return render(request, 'dynamic_models/instance_form.html', {
         'model': model,
         'fields': fields
-    })
+    })    
+
+
+@login_required
+def upload_file(request, instance_id, field_id):
+    instance = get_object_or_404(DynamicModelInstance, pk=instance_id, created_by=request.user)
+    field = get_object_or_404(DynamicField, pk=field_id)
+
+    if request.method == 'POST':
+        form = DynamicFieldFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            file_instance = form.save(commit=False)
+            file_instance.instance = instance
+            file_instance.field = field
+            file_instance.save()
+            messages.success(request, 'File uploaded successfully!')
+            return redirect('instance_detail', instance_id=instance.id)
+    else:
+        form = DynamicFieldFileForm()
+
+    return render(request, 'dynamic_models/upload_file.html', {'form': form, 'instance': instance, 'field': field})    
     
     
 @login_required

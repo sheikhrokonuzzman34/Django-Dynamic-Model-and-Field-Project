@@ -13,8 +13,7 @@
 
           {% if field.field_type == 'bool' %}
             <div class="form-check">
-              <input type="checkbox" name="{{ field.name }}" id="{{ field.name }}" class="form-check-input" 
-                     {% if field.default_value == 'true' %}checked{% endif %}>
+              <input type="checkbox" name="{{ field.name }}" id="{{ field.name }}" class="form-check-input">
               <label for="{{ field.name }}" class="form-check-label">{{ field.display_name }}</label>
             </div>
 
@@ -66,6 +65,12 @@
 
           {% endif %}
 
+          <!-- Error display -->
+          {% if errors and errors.get(field.name) %}
+            <div class="text-danger">
+              {{ errors.get(field.name) }}
+            </div>
+          {% endif %}
         </div>
       {% endfor %}
 

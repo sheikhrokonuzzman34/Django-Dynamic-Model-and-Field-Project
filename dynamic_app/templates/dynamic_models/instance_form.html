@@ -1,4 +1,5 @@
 {% extends 'base_generic.html' %}
+{% load custom_filters %}
 
 {% block content %}
   <div class="container mt-5">
@@ -66,9 +67,9 @@
           {% endif %}
 
           <!-- Error display -->
-          {% if errors and errors.get(field.name) %}
+          {% if errors|get_item:field.name %}
             <div class="text-danger">
-              {{ errors.get(field.name) }}
+              {{ errors|get_item:field.name }}
             </div>
           {% endif %}
         </div>

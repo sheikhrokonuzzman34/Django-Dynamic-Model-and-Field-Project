@@ -6,6 +6,9 @@ from django.http import JsonResponse
 from .models import *
 from .forms import *
 import json
+# hello 
+from django.http import JsonResponse
+
 
 @login_required
 def model_list(request):
@@ -111,7 +114,6 @@ def field_update(request, pk):
 
     
     
-from django.http import JsonResponse
 
 @login_required
 def instance_create(request, model_pk):
@@ -128,18 +130,24 @@ def instance_create(request, model_pk):
                 uploaded_file = request.FILES.get(field.name)
                 if field.is_required and not uploaded_file:
                     errors[field.name] = 'This file is required.'
-                if uploaded_file:
+                elif uploaded_file:
                     # Validate the file type
                     try:
                         validate_file_type(uploaded_file)
                         files_to_save.append((field, uploaded_file))
+                        # Include file metadata in the JSONField
+                        data[field.name] = {
+                            'file_name': uploaded_file.name,
+                            'file_extension': os.path.splitext(uploaded_file.name)[1].lower()
+                        }
                     except ValidationError as e:
                         errors[field.name] = e.messages[0]
             else:
                 value = request.POST.get(field.name)
                 if field.is_required and not value:
                     errors[field.name] = 'This field is required.'
-                data[field.name] = value
+                else:
+                    data[field.name] = value
 
         if not errors:
             # Create the instance
@@ -151,7 +159,7 @@ def instance_create(request, model_pk):
 
             # Save files linked to the instance
             for field, uploaded_file in files_to_save:
-                file_instance = DynamicFieldFile.objects.create(
+                DynamicFieldFile.objects.create(
                     instance=instance,
                     field=field,
                     file=uploaded_file,
@@ -167,8 +175,9 @@ def instance_create(request, model_pk):
 
     return render(request, 'dynamic_models/instance_form.html', {
         'model': model,
-        'fields': fields
-    })    
+        'fields': fields,
+        'errors': errors if request.method == 'POST' else {}
+    }) 
 
 
 @login_required

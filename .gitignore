@@ -165,4 +165,5 @@ cython_debug/
 
 *.zip
 *.pdf
+*.docx
 

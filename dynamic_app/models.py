@@ -30,6 +30,8 @@ class DynamicField(models.Model):
         ('datetime', 'DateTime'),
         ('file', 'File'),
         ('choice', 'Choice'),
+        ('fk', 'Foreign Key'),
+        ('m2m', 'Many to Many'),
     ]
 
     dynamic_model = models.ForeignKey(DynamicModel, on_delete=models.CASCADE, related_name='fields')
@@ -40,6 +42,8 @@ class DynamicField(models.Model):
     is_unique = models.BooleanField(default=True)
     is_readonly = models.BooleanField(default=False)
     display_order = models.IntegerField(default=0)
+    related_model = models.ForeignKey(DynamicModel, null=True, blank=True, 
+                                    on_delete=models.SET_NULL, related_name='related_fields')
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -54,6 +58,8 @@ class DynamicField(models.Model):
 
     def __str__(self):
         return f"{self.dynamic_model.name} - {self.name}"
+    
+    
 
 class DynamicFieldChoice(models.Model):
     dynamic_field = models.ForeignKey(DynamicField, on_delete=models.CASCADE, related_name='choices')

@@ -6,8 +6,9 @@ from django.http import JsonResponse
 from .models import *
 from .forms import *
 import json
-# hello 
 from django.http import JsonResponse
+from django.db import transaction
+
 
 
 @login_required
@@ -113,26 +114,36 @@ def field_update(request, pk):
 
 
     
-    
 
 @login_required
 def instance_create(request, model_pk):
     model = get_object_or_404(DynamicModel, pk=model_pk, created_by=request.user)
     fields = model.fields.all()
+    
+    # Prepare related data for each field
+    field_related_data = {}
+    for field in fields:
+        if field.field_type in ['fk', 'm2m'] and field.related_model:
+            # Get instances of the related model
+            related_instances = DynamicModelInstance.objects.filter(
+                dynamic_model=field.related_model
+            ).order_by('-created_at')
+            field_related_data[field.name] = related_instances
 
     if request.method == 'POST':
         data = {}
         errors = {}
         files_to_save = []
 
+        # Handle all fields
         for field in fields:
             if field.field_type == 'file':
                 uploaded_file = request.FILES.get(field.name)
                 if field.is_required and not uploaded_file:
                     errors[field.name] = 'This file is required.'
                 elif uploaded_file:
-                    # Validate the file type
                     try:
+                        # Use your validation function
                         validate_file_type(uploaded_file)
                         files_to_save.append((field, uploaded_file))
                         # Include file metadata in the JSONField
@@ -141,7 +152,27 @@ def instance_create(request, model_pk):
                             'file_extension': os.path.splitext(uploaded_file.name)[1].lower()
                         }
                     except ValidationError as e:
-                        errors[field.name] = e.messages[0]
+                        errors[field.name] = str(e)
+            elif field.field_type == 'fk':
+                value = request.POST.get(field.name)
+                if field.is_required and not value:
+                    errors[field.name] = 'This field is required.'
+                elif value:
+                    try:
+                        # Store the instance ID in the data
+                        data[field.name] = int(value)
+                    except ValueError:
+                        errors[field.name] = 'Invalid value selected.'
+            elif field.field_type == 'm2m':
+                values = request.POST.getlist(field.name)
+                if field.is_required and not values:
+                    errors[field.name] = 'This field is required.'
+                elif values:
+                    try:
+                        # Store the list of instance IDs in the data
+                        data[field.name] = [int(v) for v in values]
+                    except ValueError:
+                        errors[field.name] = 'Invalid values selected.'
             else:
                 value = request.POST.get(field.name)
                 if field.is_required and not value:
@@ -150,25 +181,31 @@ def instance_create(request, model_pk):
                     data[field.name] = value
 
         if not errors:
-            # Create the instance
-            instance = DynamicModelInstance.objects.create(
-                dynamic_model=model,
-                created_by=request.user,
-                data=data
-            )
+            try:
+                with transaction.atomic():
+                    # Create the instance
+                    instance = DynamicModelInstance.objects.create(
+                        dynamic_model=model,
+                        created_by=request.user,
+                        data=data
+                    )
 
-            # Save files linked to the instance
-            for field, uploaded_file in files_to_save:
-                DynamicFieldFile.objects.create(
-                    instance=instance,
-                    field=field,
-                    file=uploaded_file,
-                    file_name=uploaded_file.name,
-                    file_extension=os.path.splitext(uploaded_file.name)[1].lower()
-                )
+                    # Save files linked to the instance
+                    for field, uploaded_file in files_to_save:
+                        DynamicFieldFile.objects.create(
+                            instance=instance,
+                            field=field,
+                            file=uploaded_file,
+                            file_name=uploaded_file.name,
+                            file_extension=os.path.splitext(uploaded_file.name)[1].lower()
+                        )
 
-            messages.success(request, 'Instance created successfully!')
-            return redirect('instance_list', model_pk=model_pk)
+                    messages.success(request, 'Instance created successfully!')
+                    return redirect('instance_list', model_pk=model_pk)
+            except Exception as e:
+                errors['general'] = str(e)
+                messages.error(request, f'Error saving instance: {str(e)}')
+                return JsonResponse({"errors": errors}, status=400)
 
         messages.error(request, 'Please correct the errors below.')
         return JsonResponse({"errors": errors}, status=400)
@@ -176,10 +213,76 @@ def instance_create(request, model_pk):
     return render(request, 'dynamic_models/instance_form.html', {
         'model': model,
         'fields': fields,
-        'errors': errors if request.method == 'POST' else {}
-    }) 
+        'field_related_data': field_related_data,
+        'errors': {} if request.method != 'POST' else errors
+    })
 
 
+
+#### ksdjg
+# @login_required
+# def instance_create(request, model_pk):
+#     model = get_object_or_404(DynamicModel, pk=model_pk, created_by=request.user)
+#     fields = model.fields.all()
+
+#     if request.method == 'POST':
+#         data = {}
+#         errors = {}
+#         files_to_save = []
+
+#         for field in fields:
+#             if field.field_type == 'file':
+#                 uploaded_file = request.FILES.get(field.name)
+#                 if field.is_required and not uploaded_file:
+#                     errors[field.name] = 'This file is required.'
+#                 elif uploaded_file:
+#                     # Validate the file type
+#                     try:
+#                         validate_file_type(uploaded_file)
+#                         files_to_save.append((field, uploaded_file))
+#                         # Include file metadata in the JSONField
+#                         data[field.name] = {
+#                             'file_name': uploaded_file.name,
+#                             'file_extension': os.path.splitext(uploaded_file.name)[1].lower()
+#                         }
+#                     except ValidationError as e:
+#                         errors[field.name] = e.messages[0]
+#             else:
+#                 value = request.POST.get(field.name)
+#                 if field.is_required and not value:
+#                     errors[field.name] = 'This field is required.'
+#                 else:
+#                     data[field.name] = value
+
+#         if not errors:
+#             # Create the instance
+#             instance = DynamicModelInstance.objects.create(
+#                 dynamic_model=model,
+#                 created_by=request.user,
+#                 data=data
+#             )
+
+#             # Save files linked to the instance
+#             for field, uploaded_file in files_to_save:
+#                 DynamicFieldFile.objects.create(
+#                     instance=instance,
+#                     field=field,
+#                     file=uploaded_file,
+#                     file_name=uploaded_file.name,
+#                     file_extension=os.path.splitext(uploaded_file.name)[1].lower()
+#                 )
+
+#             messages.success(request, 'Instance created successfully!')
+#             return redirect('instance_list', model_pk=model_pk)
+
+#         messages.error(request, 'Please correct the errors below.')
+#         return JsonResponse({"errors": errors}, status=400)
+
+#     return render(request, 'dynamic_models/instance_form.html', {
+#         'model': model,
+#         'fields': fields,
+#         'errors': errors if request.method == 'POST' else {}
+#     }) 
     
     
     

@@ -24,7 +24,7 @@ class DynamicFieldForm(forms.ModelForm):
         model = DynamicField
         fields = [
             'dynamic_model', 'name', 'display_name', 'field_type',
-            'is_required', 'is_unique', 'is_readonly', 'display_order'
+            'is_required', 'is_unique', 'is_readonly', 'display_order','related_model'
         ]
 
     def __init__(self, *args, **kwargs):

@@ -50,18 +50,31 @@
               {% endfor %}
             </select>
 
-          {% elif field.field_type == 'fk' %}
+            {% elif field.field_type == 'fk' %}
             <select name="{{ field.name }}" id="{{ field.name }}" class="form-control">
-              {% for option in field.related_model.all %}
-                <option value="{{ option.pk }}">{{ option }}</option>
-              {% endfor %}
+                <option value="">---------</option>
+                {% for instance in field_related_data|get_item:field.name %}
+                    <option value="{{ instance.id }}">
+                        {% if instance.data.name %}
+                            {{ instance.data.name }}
+                        {% else %}
+                            Instance {{ instance.id }}
+                        {% endif %}
+                    </option>
+                {% endfor %}
             </select>
-
-          {% elif field.field_type == 'm2m' %}
+        
+        {% elif field.field_type == 'm2m' %}
             <select name="{{ field.name }}" id="{{ field.name }}" class="form-control" multiple>
-              {% for option in field.related_model.all %}
-                <option value="{{ option.pk }}">{{ option }}</option>
-              {% endfor %}
+                {% for instance in field_related_data|get_item:field.name %}
+                    <option value="{{ instance.id }}">
+                        {% if instance.data.name %}
+                            {{ instance.data.name }}
+                        {% else %}
+                            Instance {{ instance.id }}
+                        {% endif %}
+                    </option>
+                {% endfor %}
             </select>
 
           {% endif %}

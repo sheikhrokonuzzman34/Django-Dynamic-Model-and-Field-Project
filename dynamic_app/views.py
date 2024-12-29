@@ -180,24 +180,7 @@ def instance_create(request, model_pk):
     }) 
 
 
-@login_required
-def upload_file(request, instance_id, field_id):
-    instance = get_object_or_404(DynamicModelInstance, pk=instance_id, created_by=request.user)
-    field = get_object_or_404(DynamicField, pk=field_id)
-
-    if request.method == 'POST':
-        form = DynamicFieldFileForm(request.POST, request.FILES)
-        if form.is_valid():
-            file_instance = form.save(commit=False)
-            file_instance.instance = instance
-            file_instance.field = field
-            file_instance.save()
-            messages.success(request, 'File uploaded successfully!')
-            return redirect('instance_detail', instance_id=instance.id)
-    else:
-        form = DynamicFieldFileForm()
-
-    return render(request, 'dynamic_models/upload_file.html', {'form': form, 'instance': instance, 'field': field})    
+    
     
     
 @login_required

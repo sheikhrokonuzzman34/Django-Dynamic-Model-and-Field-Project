@@ -31,7 +31,7 @@ urlpatterns = [
     
     path('models/<int:model_pk>/instances/', views.instance_list, name='instance_list'),
     path('models/<int:model_pk>/instances/create/', views.instance_create, name='instance_create'),
-    path('instances/<int:instance_id>/fields/<int:field_id>/upload/', views.upload_file, name='upload_file'),
+ 
     
     path('search/', views.dynamic_instance_search, name='dynamic_instance_search'),
 

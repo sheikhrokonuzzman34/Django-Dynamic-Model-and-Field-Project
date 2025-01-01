@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from dynamic_app import views
+from accounts.views import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -34,5 +35,8 @@ urlpatterns = [
  
     
     path('search/', views.dynamic_instance_search, name='dynamic_instance_search'),
+    
+    path('register/', register_user, name='register'),
+    path('login/', login_user, name='login'),
 
 ]

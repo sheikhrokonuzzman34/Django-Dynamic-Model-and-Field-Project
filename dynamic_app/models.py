@@ -1,6 +1,6 @@
 
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 from django.core.exceptions import ValidationError
 import json
 import os
@@ -15,7 +15,7 @@ def validate_file_type(value):
 # Represents a dynamic model schema created by users
 class DynamicModel(models.Model):
     name = models.CharField(max_length=100, unique=True)  # Unique name for the dynamic model
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)  # User who created the model
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # User who created the model
     created_at = models.DateTimeField(auto_now_add=True)  # Timestamp for creation
     updated_at = models.DateTimeField(auto_now=True)  # Timestamp for the last update
 
@@ -48,7 +48,7 @@ class DynamicField(models.Model):
     display_order = models.IntegerField(default=0)  # Order in which the field should be displayed
     related_model = models.ForeignKey(DynamicModel, null=True, blank=True, 
                                       on_delete=models.SET_NULL, related_name='related_fields')  # For relational fields
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)  # User who created the field
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # User who created the field
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -124,7 +124,7 @@ class DynamicFieldFile(models.Model):
 # Represents an instance of a DynamicModel with its data
 class DynamicModelInstance(models.Model):
     dynamic_model = models.ForeignKey(DynamicModel, on_delete=models.CASCADE)  # Link to the parent dynamic model
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)  # User who created the instance
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # User who created the instance
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     data = models.JSONField()  # Stores field values as JSON

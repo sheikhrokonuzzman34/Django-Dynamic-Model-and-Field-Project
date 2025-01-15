@@ -22,6 +22,12 @@ from accounts.views import *
 urlpatterns = [
     path('admin/', admin.site.urls),
     
+        # Add these to your existing urls.py
+    path('folder_list', views.folder_list, name='folder_list'),
+    path('folders/create/', views.folder_create, name='folder_create'),
+    path('folders/<int:parent_id>/create/', views.folder_create, name='subfolder_create'),
+    path('folders/<int:pk>/', views.folder_detail, name='folder_detail'),
+    
     path('', views.model_list, name='model_list'),
     path('model_create', views.model_create, name='model_create'),
     path('models/<int:pk>/', views.model_detail, name='model_detail'),
@@ -38,5 +44,9 @@ urlpatterns = [
     
     path('register/', register_user, name='register'),
     path('login/', login_user, name='login'),
+    
+    
+    
+
 
 ]

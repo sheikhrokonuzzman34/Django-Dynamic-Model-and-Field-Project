@@ -1,0 +1,50 @@
+{% extends 'base_generic.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ folder.name }}</h2>
+    
+    <div class="row mb-4">
+        <div class="col">
+            <h3>Subfolders</h3>
+            <a href="{% url 'subfolder_create' folder.id %}" class="btn btn-success mb-3">Add Subfolder</a>
+            
+            {% for subfolder in subfolders %}
+                <div class="card mb-2">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ subfolder.name }}</h5>
+                        <a href="{% url 'folder_detail' subfolder.id %}" class="btn btn-info">View</a>
+                    </div>
+                </div>
+            {% empty %}
+                <p>No subfolders found.</p>
+            {% endfor %}
+        </div>
+        
+        <div class="col">
+            <h3>Instances</h3>
+            {% for instance in instances %}
+                <div class="card mb-2">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ instance.dynamic_model.name }} Instance</h5>
+                        <p class="card-text">Created: {{ instance.created_at }}</p>
+                    </div>
+                </div>
+            {% empty %}
+                <p>No instances found.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+<!-- Update your existing instance_form.html to include folder selection -->
+<!-- Add this inside your existing form -->
+<div class="form-group">
+    <label for="folder">Select Folder:</label>
+    <select name="folder" id="folder" class="form-control" required>
+        {% for folder in folders %}
+            <option value="{{ folder.id }}">{{ folder.name }}</option>
+        {% endfor %}
+    </select>
+</div>

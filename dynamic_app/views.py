@@ -10,6 +10,47 @@ from django.http import JsonResponse
 from django.db import transaction
 
 
+@login_required
+def folder_list(request):
+    # Get root folders (folders without parents)
+    root_folders = Folder.objects.filter(parent=None)
+    return render(request, 'dynamic_models/folder_list.html', {'folders': root_folders})
+
+@login_required
+def folder_create(request, parent_id=None):
+    parent_folder = None
+    if parent_id:
+        parent_folder = get_object_or_404(Folder, id=parent_id)
+    
+    if request.method == 'POST':
+        form = FolderForm(request.POST)
+        if form.is_valid():
+            folder = form.save(commit=False)
+            if parent_folder:
+                folder.parent = parent_folder
+            folder.save()
+            messages.success(request, 'Folder created successfully!')
+            return redirect('folder_list')
+    else:
+        form = FolderForm()
+    
+    return render(request, 'dynamic_models/folder_form.html', {
+        'form': form,
+        'parent_folder': parent_folder
+    })
+
+@login_required
+def folder_detail(request, pk):
+    folder = get_object_or_404(Folder, pk=pk)
+    subfolders = folder.subfolders.all()
+    instances = DynamicModelInstance.objects.filter(folder=folder)
+    
+    return render(request, 'dynamic_models/folder_detail.html', {
+        'folder': folder,
+        'subfolders': subfolders,
+        'instances': instances
+    })
+
 
 @login_required
 def model_list(request):
@@ -115,10 +156,118 @@ def field_update(request, pk):
 
     
 
+# @login_required
+# def instance_create(request, model_pk):
+#     model = get_object_or_404(DynamicModel, pk=model_pk, created_by=request.user)
+#     fields = model.fields.all()
+    
+#     # Prepare related data for each field
+#     field_related_data = {}
+#     for field in fields:
+#         if field.field_type in ['fk', 'm2m'] and field.related_model:
+#             # Get instances of the related model
+#             related_instances = DynamicModelInstance.objects.filter(
+#                 dynamic_model=field.related_model
+#             ).order_by('-created_at')
+#             field_related_data[field.name] = related_instances
+
+#     if request.method == 'POST':
+#         data = {}
+#         errors = {}
+#         files_to_save = []
+
+#         # Handle all fields
+#         for field in fields:
+#             if field.field_type == 'file':
+#                 uploaded_file = request.FILES.get(field.name)
+#                 if field.is_required and not uploaded_file:
+#                     errors[field.name] = 'This file is required.'
+#                 elif uploaded_file:
+#                     try:
+#                         # Use your validation function
+#                         validate_file_type(uploaded_file)
+#                         files_to_save.append((field, uploaded_file))
+#                         # Include file metadata in the JSONField
+#                         data[field.name] = {
+#                             'file_name': uploaded_file.name,
+#                             'file_extension': os.path.splitext(uploaded_file.name)[1].lower()
+#                         }
+#                     except ValidationError as e:
+#                         errors[field.name] = str(e)
+#             elif field.field_type == 'fk':
+#                 value = request.POST.get(field.name)
+#                 if field.is_required and not value:
+#                     errors[field.name] = 'This field is required.'
+#                 elif value:
+#                     try:
+#                         # Store the instance ID in the data
+#                         data[field.name] = int(value)
+#                     except ValueError:
+#                         errors[field.name] = 'Invalid value selected.'
+#             elif field.field_type == 'm2m':
+#                 values = request.POST.getlist(field.name)
+#                 if field.is_required and not values:
+#                     errors[field.name] = 'This field is required.'
+#                 elif values:
+#                     try:
+#                         # Store the list of instance IDs in the data
+#                         data[field.name] = [int(v) for v in values]
+#                     except ValueError:
+#                         errors[field.name] = 'Invalid values selected.'
+#             else:
+#                 value = request.POST.get(field.name)
+#                 if field.is_required and not value:
+#                     errors[field.name] = 'This field is required.'
+#                 else:
+#                     data[field.name] = value
+
+#         if not errors:
+#             try:
+#                 with transaction.atomic():
+#                     # Create the instance
+#                     instance = DynamicModelInstance.objects.create(
+#                         dynamic_model=model,
+#                         created_by=request.user,
+#                         data=data
+#                     )
+
+#                     # Save files linked to the instance
+#                     for field, uploaded_file in files_to_save:
+#                         DynamicFieldFile.objects.create(
+#                             instance=instance,
+#                             field=field,
+#                             file=uploaded_file,
+#                             file_name=uploaded_file.name,
+#                             file_extension=os.path.splitext(uploaded_file.name)[1].lower()
+#                         )
+
+#                     messages.success(request, 'Instance created successfully!')
+#                     return redirect('instance_list', model_pk=model_pk)
+#             except Exception as e:
+#                 errors['general'] = str(e)
+#                 messages.error(request, f'Error saving instance: {str(e)}')
+#                 return JsonResponse({"errors": errors}, status=400)
+
+#         messages.error(request, 'Please correct the errors below.')
+#         return JsonResponse({"errors": errors}, status=400)
+
+#     return render(request, 'dynamic_models/instance_form.html', {
+#         'model': model,
+#         'fields': fields,
+#         'field_related_data': field_related_data,
+#         'errors': {} if request.method != 'POST' else errors
+#     })
+
 @login_required
 def instance_create(request, model_pk):
     model = get_object_or_404(DynamicModel, pk=model_pk, created_by=request.user)
     fields = model.fields.all()
+    
+    # Get all folders for selection
+    folders = Folder.objects.all()
+    
+    # Get default root folder
+    default_folder = Folder.objects.filter(parent=None).first()
     
     # Prepare related data for each field
     field_related_data = {}
@@ -134,6 +283,13 @@ def instance_create(request, model_pk):
         data = {}
         errors = {}
         files_to_save = []
+
+        # Get selected folder or use default
+        folder_id = request.POST.get('folder', default_folder.id if default_folder else None)
+        try:
+            selected_folder = Folder.objects.get(id=folder_id)
+        except (Folder.DoesNotExist, ValueError):
+            errors['folder'] = 'Please select a valid folder.'
 
         # Handle all fields
         for field in fields:
@@ -187,6 +343,7 @@ def instance_create(request, model_pk):
                     instance = DynamicModelInstance.objects.create(
                         dynamic_model=model,
                         created_by=request.user,
+                        folder=selected_folder,  # Add selected folder
                         data=data
                     )
 
@@ -196,7 +353,7 @@ def instance_create(request, model_pk):
                             instance=instance,
                             field=field,
                             file=uploaded_file,
-                            file_name=uploaded_file.name,
+                            file_name=os.path.splitext(uploaded_file.name)[0],
                             file_extension=os.path.splitext(uploaded_file.name)[1].lower()
                         )
 
@@ -210,12 +367,16 @@ def instance_create(request, model_pk):
         messages.error(request, 'Please correct the errors below.')
         return JsonResponse({"errors": errors}, status=400)
 
-    return render(request, 'dynamic_models/instance_form.html', {
+    context = {
         'model': model,
         'fields': fields,
+        'folders': folders,
+        'default_folder': default_folder,
         'field_related_data': field_related_data,
         'errors': {} if request.method != 'POST' else errors
-    })
+    }
+
+    return render(request, 'dynamic_models/instance_form.html', context)
 
 
 

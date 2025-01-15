@@ -1,0 +1,24 @@
+{% extends 'base_generic.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Folders</h2>
+    <a href="{% url 'folder_create' %}" class="btn btn-primary mb-3">Create Root Folder</a>
+
+    <div class="folder-list">
+        {% for folder in folders %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">{{ folder.name }}</h5>
+                    <div class="btn-group">
+                        <a href="{% url 'folder_detail' folder.id %}" class="btn btn-info">View</a>
+                        <a href="{% url 'subfolder_create' folder.id %}" class="btn btn-success">Add Subfolder</a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <p>No folders found.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

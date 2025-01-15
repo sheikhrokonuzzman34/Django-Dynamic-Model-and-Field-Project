@@ -13,20 +13,12 @@ def validate_file_type(value):
         raise ValidationError(f"Unsupported file type. Allowed types are: {', '.join(allowed_extensions)}")
     
     
-class Folder(models.Model):
-    name = models.CharField(max_length=255)
-    parent = models.ForeignKey(
-        'self', on_delete=models.CASCADE, null=True, blank=True, related_name='subfolders'
-    )
-
-    def __str__(self):
-        return self.name    
+   
 
 # Represents a dynamic model schema created by users
 class DynamicModel(models.Model):
     name = models.CharField(max_length=100, unique=True)  # Unique name for the dynamic model
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # User who created the model
-    folder = models.ForeignKey(Folder, on_delete=models.CASCADE, related_name='files')
     created_at = models.DateTimeField(auto_now_add=True)  # Timestamp for creation
     updated_at = models.DateTimeField(auto_now=True)  # Timestamp for the last update
 
@@ -132,10 +124,21 @@ class DynamicFieldFile(models.Model):
         return f"File for {self.instance} - {self.field.name}"
     
     
+class Folder(models.Model):
+    name = models.CharField(max_length=255,default="Project Folder")
+    parent = models.ForeignKey(
+        'self', on_delete=models.CASCADE, null=True, blank=True, related_name='subfolders'
+    )
+
+    def __str__(self):
+        return self.name     
+    
+    
 # Represents an instance of a DynamicModel with its data
 class DynamicModelInstance(models.Model):
     dynamic_model = models.ForeignKey(DynamicModel, on_delete=models.CASCADE)  # Link to the parent dynamic model
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # User who created the instance
+    folder = models.ForeignKey(Folder, on_delete=models.CASCADE, related_name='files')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     data = models.JSONField()  # Stores field values as JSON

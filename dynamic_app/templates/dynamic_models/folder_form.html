@@ -1,0 +1,12 @@
+{% extends 'base_generic.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{% if parent_folder %}Create Subfolder in {{ parent_folder.name }}{% else %}Create Root Folder{% endif %}</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Create Folder</button>
+    </form>
+</div>
+{% endblock %}

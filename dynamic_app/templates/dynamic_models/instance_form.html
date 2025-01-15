@@ -8,6 +8,27 @@
     <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
       {% csrf_token %}
 
+      <!-- Add Folder Selection at the top -->
+      <div class="form-group mb-3">
+        <label for="folder" class="form-label">Select Folder</label>
+        <select name="folder" id="folder" class="form-control" required>
+          {% for folder in folders %}
+            <option value="{{ folder.id }}" {% if folder.id == default_folder.id %}selected{% endif %}>
+              {% if folder.parent %}
+                {{ folder.parent.name }} / {{ folder.name }}
+              {% else %}
+                {{ folder.name }}
+              {% endif %}
+            </option>
+          {% endfor %}
+        </select>
+        {% if errors.folder %}
+          <div class="text-danger">
+            {{ errors.folder }}
+          </div>
+        {% endif %}
+      </div>
+
       {% for field in fields %}
         <div class="form-group mb-3">
           <label for="{{ field.name }}" class="form-label">{{ field.display_name }}</label>
@@ -50,7 +71,7 @@
               {% endfor %}
             </select>
 
-            {% elif field.field_type == 'fk' %}
+          {% elif field.field_type == 'fk' %}
             <select name="{{ field.name }}" id="{{ field.name }}" class="form-control">
                 <option value="">---------</option>
                 {% for instance in field_related_data|get_item:field.name %}
@@ -64,7 +85,7 @@
                 {% endfor %}
             </select>
         
-        {% elif field.field_type == 'm2m' %}
+          {% elif field.field_type == 'm2m' %}
             <select name="{{ field.name }}" id="{{ field.name }}" class="form-control" multiple>
                 {% for instance in field_related_data|get_item:field.name %}
                     <option value="{{ instance.id }}">
@@ -76,7 +97,6 @@
                     </option>
                 {% endfor %}
             </select>
-
           {% endif %}
 
           <!-- Error display -->

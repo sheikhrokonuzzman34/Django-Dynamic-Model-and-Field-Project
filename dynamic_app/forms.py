@@ -2,6 +2,12 @@ from django import forms
 from .models import *
 from django.core.exceptions import ValidationError
 
+
+class FolderForm(forms.ModelForm):
+    class Meta:
+        model = Folder
+        fields = ['name']
+
 class DynamicModelForm(forms.ModelForm):
     class Meta:
         model = DynamicModel

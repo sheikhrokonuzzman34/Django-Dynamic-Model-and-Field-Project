@@ -9,6 +9,7 @@ admin.site.register(DynamicModel)
 admin.site.register(DynamicField)
 admin.site.register(DynamicFieldChoice)
 admin.site.register(DynamicFieldFile)
+admin.site.register(Folder)
 
 
 

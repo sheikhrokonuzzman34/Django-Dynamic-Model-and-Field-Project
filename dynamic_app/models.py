@@ -127,7 +127,7 @@ class DynamicFieldFile(models.Model):
 class Folder(models.Model):
     name = models.CharField(max_length=255,default="Project Folder")
     parent = models.ForeignKey(
-        'self', on_delete=models.CASCADE, null=True, blank=True, related_name='subfolders'
+        'self', on_delete=models.RESTRICT, null=True, blank=True, related_name='subfolders'
     )
 
     def __str__(self):

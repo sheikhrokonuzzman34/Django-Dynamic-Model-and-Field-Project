@@ -1,0 +1,20 @@
+{% for folder in folders %}
+<li>
+    
+    
+    <!-- Folder name -->
+    <i class="bi bi-folder-fill text-warning"></i>
+    <a href="{% url 'folder_detail' folder.id %}">{{ folder.name }}</a>
+    
+    <!-- Right icon to add a folder under this child folder -->
+    <a href="{% url 'subfolder_create' folder.id %}" class="text-success ms-2">
+        <i class="bi bi-plus-circle"></i>
+    </a>
+    
+    {% if folder.subfolders.all %}
+    <ul class="ms-3">
+        {% include "dynamic_models/folder_tree.html" with folders=folder.subfolders.all %}
+    </ul>
+    {% endif %}
+</li>
+{% endfor %}

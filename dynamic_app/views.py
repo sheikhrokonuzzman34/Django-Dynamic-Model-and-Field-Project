@@ -30,7 +30,7 @@ def folder_create(request, parent_id=None):
                 folder.parent = parent_folder
             folder.save()
             messages.success(request, 'Folder created successfully!')
-            return redirect('folder_list')
+            return redirect('/')
     else:
         form = FolderForm()
     
